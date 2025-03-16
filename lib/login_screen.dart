@@ -1,101 +1,51 @@
 import 'package:flutter/material.dart';
-import 'signup_screen.dart'; // Import SignUp Screen
+import 'package:firebase_auth/firebase_auth.dart';
+import 'signup_screen.dart';
+import 'home_screen.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class LoginScreen extends StatefulWidget {
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  void login() async {
+    try {
+      await _auth.signInWithEmailAndPassword(
+          email: emailController.text, password: passwordController.text);
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => HomeScreen()));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Login failed: ${e.toString()}")));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  "Login",
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // Email Field
-                _buildTextField("Email"),
-                const SizedBox(height: 10),
-
-                // Password Field
-                _buildTextField("Password"),
-                const SizedBox(height: 20),
-
-                // Login Button
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                  ),
-                  onPressed: () {
-                    // Login logic
-                  },
-                  child: const Text("Login", style: TextStyle(color: Colors.white)),
-                ),
-                const SizedBox(height: 10),
-
-                // Forgot Password & Sign Up Links
-                TextButton(
-                  onPressed: () {
-                    // Navigate to Forgot Password Page (if implemented)
-                  },
-                  child: const Text(
-                    "Forgot password?",
-                    style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const Text("Don't have an account?"),
-                TextButton(
-                  onPressed: () {
-                    // Navigate to Sign Up Page
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const SignUpScreen()),
-                    );
-                  },
-                  child: const Text(
-                    "Sign Up",
-                    style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
+          padding: EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text("Login", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+              SizedBox(height: 20),
+              TextField(controller: emailController, decoration: InputDecoration(labelText: "Email")),
+              TextField(controller: passwordController, decoration: InputDecoration(labelText: "Password"), obscureText: true),
+              SizedBox(height: 10),
+              ElevatedButton(onPressed: login, child: Text("Login")),
+              TextButton(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpScreen())),
+                  child: Text("Don't have an account? Sign Up", style: TextStyle(fontWeight: FontWeight.bold)))
+            ],
           ),
         ),
-      ),
-    );
-  }
-
-  // Helper function to create input fields
-  Widget _buildTextField(String hint) {
-    return TextField(
-      decoration: InputDecoration(
-        hintText: hint,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       ),
     );
   }

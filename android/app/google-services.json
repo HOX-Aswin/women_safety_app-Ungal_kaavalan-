@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "271487999219",
+    "project_id": "ungal-kaavalan",
+    "storage_bucket": "ungal-kaavalan.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:271487999219:android:2be83f340fd46b51e2eb86",
+        "android_client_info": {
+          "package_name": "com.example.ungal_kaavalan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkZigsAXMspSBlC_Opc_eRdPkSXdaocY0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
