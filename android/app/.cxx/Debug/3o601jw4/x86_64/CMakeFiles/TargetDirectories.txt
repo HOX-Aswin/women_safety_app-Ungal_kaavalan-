@@ -1,0 +1,2 @@
+C:/New volume/Study/HOX-Tech/Flutter/Apps/women_safety_app-Ungal_kaavalan-/android/app/.cxx/Debug/3o601jw4/x86_64/CMakeFiles/edit_cache.dir
+C:/New volume/Study/HOX-Tech/Flutter/Apps/women_safety_app-Ungal_kaavalan-/android/app/.cxx/Debug/3o601jw4/x86_64/CMakeFiles/rebuild_cache.dir
