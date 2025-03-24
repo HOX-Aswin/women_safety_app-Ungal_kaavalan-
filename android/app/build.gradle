@@ -1,50 +1,53 @@
 plugins {
     id "com.android.application"
     id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
-    id 'com.google.gms.google-services'
+    id 'com.google.gms.google-services'  // ✅ Firebase Plugin
 }
 
 android {
-    namespace = "com.example.ungal_kaavalan"
-    compileSdk = flutter.compileSdkVersion
+    namespace "com.example.ungal_kaavalan"  // ✅ Keep your main app's namespace
+    compileSdk 34  // ✅ Explicit compileSdk version
     ndkVersion = flutter.ndkVersion
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8
-    }
-
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.ungal_kaavalan"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdkVersion 23
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        applicationId "com.example.ungal_kaavalan"  // ✅ Keep main app's ID
+        minSdkVersion 23  // ✅ Set minSdk from main app
+        targetSdkVersion 34  // ✅ Explicitly set targetSdk
+        versionCode flutter.versionCode
+        versionName flutter.versionName
+    }
+
+    signingConfigs {
+        debug {
+            storeFile file("$rootDir/debug.keystore")  // ✅ Ensures debug keystore exists
+        }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            minifyEnabled false  // ✅ Ensure minify is disabled for now
+            shrinkResources false  // ✅ Disable resource shrinking
+            signingConfig signingConfigs.debug  // ✅ Use debug signing
         }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 }
 
 flutter {
-    source = "../.."
+    source "../.."
 }
 
-dependencies{
-    implementation platform('com.google.firebase:firebase-bom:33.10.0')
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:33.10.0')  // ✅ Keep Firebase dependencies
 }
-apply plugin: 'com.google.gms.google-services'
+
+apply plugin: 'com.google.gms.google-services'  // ✅ Apply Firebase plugin

@@ -2,11 +2,11 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        jcenter()
+        jcenter()  // ✅ Retained for potential dependencies
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.3.0'  // Ensure this is the correct version
-        classpath 'com.google.gms:google-services:4.4.2'  // Use 4.4.0 instead of 4.4.2 if issues persist
+        classpath 'com.android.tools.build:gradle:7.3.0'  // ✅ Ensure correct AGP version
+        classpath 'com.google.gms:google-services:4.4.2'  // ✅ Firebase Google Services plugin
     }
 }
 
@@ -18,10 +18,9 @@ allprojects {
 }
 
 rootProject.buildDir = "../build"
+
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-subprojects {
     project.evaluationDependsOn(":app")
 }
 
