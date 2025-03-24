@@ -14,7 +14,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Emergency contacts
   final List<String> emergencyNumbers = ["6381477929", "8778938882","8072661442","6383488874"];
- // final String emergencyMessage = "❤️Aswin Weds Deepa❤️";
   final String emergencyMessage = "🚨 SOS! I need help immediately. Please contact me!";
   // Function to send SOS message
   Future<void> _sendSOS() async {

@@ -36,21 +36,19 @@ class SignUpScreen extends ConsumerWidget {
           password: passwordController.text.trim(),
         );
 
-        String uid = userCredential.user!.uid;
-        // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
-        ref.read(uidProvider.notifier).state = userCredential.user!.uid;
+        final uid = userCredential.user!.uid;
+        final gender = ref.read(genderProvider);
         await FirebaseFirestore.instance.collection('users').doc(uid).set({
           'name': nameController.text,
           'email': emailController.text,
           'phone': phoneController.text,
-          'gender': _selectedGender,
+          'gender': gender,
           'age': ageController.text,
           'address': addressController.text,
           'aadhar': aadharController.text,
         });
-
-        // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
-        ref.read(authProvider.notifier).state = true;
+        await ref.read(uidProvider.notifier).setUid(uid);
+        await ref.read(authProvider.notifier).setAuthState(true);
         // ignore: use_build_context_synchronously
         context.go('/landing');
       } catch (e) {
@@ -171,7 +169,10 @@ class SignUpScreen extends ConsumerWidget {
       items: ["Male", "Female", "Other"]
           .map((label) => DropdownMenuItem(value: label, child: Text(label)))
           .toList(),
-      onChanged: (value) => ref.read(genderProvider.notifier).state = value,
+      onChanged: (value) {
+        ref.read(genderProvider.notifier).state = value;
+        _selectedGender = value;
+      },
       decoration: InputDecoration(
         labelText: "Gender",
         prefixIcon:

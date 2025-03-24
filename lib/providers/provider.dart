@@ -61,10 +61,25 @@ final userProvider = StreamProvider<UserModel?>((ref) {
   return FirebaseAuth.instance.authStateChanges().asyncMap((user) async {
     if (user == null) return null; // No user logged in
 
-    final userDoc =
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
     if (!userDoc.exists) return null;
 
     return UserModel.fromFirestore(userDoc.data()!);
   });
+});
+
+final userProfileProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
+  final uid = ref.watch(uidProvider);
+  if (uid == null) return null;
+
+  DocumentSnapshot userDoc =
+      await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+  if (userDoc.exists) {
+    return userDoc.data() as Map<String, dynamic>;
+  }
+  return null;
 });

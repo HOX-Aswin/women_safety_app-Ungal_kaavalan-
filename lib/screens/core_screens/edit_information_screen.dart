@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ungal_kaavalan/providers/provider.dart';
 
-class EditProfileScreen extends StatefulWidget {
-  final String uid;
-  const EditProfileScreen({super.key, required this.uid});
+class EditProfileScreen extends ConsumerStatefulWidget {
+  const EditProfileScreen({super.key});
 
   @override
   _EditProfileScreenState createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> {
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = true;
 
@@ -27,8 +28,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   void fetchUserData() async {
+    final uid = ref.read(uidProvider);
     DocumentSnapshot userDoc =
-        await FirebaseFirestore.instance.collection('users').doc(widget.uid).get();
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
     if (userDoc.exists) {
       Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
@@ -50,7 +52,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   void updateData() async {
     if (_formKey.currentState!.validate()) {
-      await FirebaseFirestore.instance.collection('users').doc(widget.uid).update({
+      final uid = ref.read(uidProvider);
+      await FirebaseFirestore.instance.collection('users').doc(uid).update({
         'name': nameController.text,
         'phone': phoneController.text,
         'age': ageController.text,
@@ -70,7 +73,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true, // ✅ Fix keyboard issues
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(title: Text("Edit Profile"), backgroundColor: Color(0xFF3674B5)),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
