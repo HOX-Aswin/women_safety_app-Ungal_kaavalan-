@@ -37,6 +37,7 @@ class SignUpScreen extends ConsumerWidget {
         );
 
         String uid = userCredential.user!.uid;
+        // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
         ref.read(uidProvider.notifier).state = userCredential.user!.uid;
         await FirebaseFirestore.instance.collection('users').doc(uid).set({
           'name': nameController.text,
@@ -48,9 +49,12 @@ class SignUpScreen extends ConsumerWidget {
           'aadhar': aadharController.text,
         });
 
+        // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
         ref.read(authProvider.notifier).state = true;
-        context.go('/home');
+        // ignore: use_build_context_synchronously
+        context.go('/landing');
       } catch (e) {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(e.toString())));
       }

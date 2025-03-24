@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ungal_kaavalan/models/user_model.dart';
 
 final genderProvider = StateProvider<String?>((ref) => null);
 
@@ -51,3 +54,17 @@ class AuthNotifier extends StateNotifier<bool> {
   }
 }
 
+final bottomNavProvider = StateProvider<int>((ref) => 0);
+
+// Fetch user data
+final userProvider = StreamProvider<UserModel?>((ref) {
+  return FirebaseAuth.instance.authStateChanges().asyncMap((user) async {
+    if (user == null) return null; // No user logged in
+
+    final userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+    if (!userDoc.exists) return null;
+
+    return UserModel.fromFirestore(userDoc.data()!);
+  });
+});

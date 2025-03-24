@@ -38,7 +38,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         await ref.read(uidProvider.notifier).setUid(uid);
         await ref.read(authProvider.notifier).setAuthState(true);
 
-        context.go('/home'); // Navigate to home screen
+        context.go('/landing'); // Navigate to home screen
       } catch (e) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text(e.toString())));
