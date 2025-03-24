@@ -1,23 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ungal_kaavalan/providers/provider.dart';
 import 'profile_screen.dart';
-import 'login_screen.dart';
 
-class HomeScreen extends StatelessWidget {
-  final String uid;
-  HomeScreen({required this.uid});
+class HomeScreen extends ConsumerWidget {
+  const HomeScreen({super.key});
 
-  void logout(BuildContext context) async {
-    await FirebaseAuth.instance.signOut();
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-      (route) => false,
-    );
-  }//as
+  void logout(BuildContext context, WidgetRef ref) async {
+  await FirebaseAuth.instance.signOut();
+
+  ref.read(authProvider.notifier).state = false;
+
+  // ignore: use_build_context_synchronously
+  context.go('/');
+}
+
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Home"),
@@ -25,7 +27,7 @@ class HomeScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: Icon(Icons.logout, color: Colors.white),
-            onPressed: () => logout(context),
+            onPressed: () => logout(context, ref),
           )
         ],
       ),
@@ -33,7 +35,7 @@ class HomeScreen extends StatelessWidget {
         child: ElevatedButton(
           onPressed: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => ProfileScreen(uid: uid)),
+            MaterialPageRoute(builder: (context) => ProfileScreen()),
           ),
           style: ElevatedButton.styleFrom(
             backgroundColor: Color(0xFF578FCA),

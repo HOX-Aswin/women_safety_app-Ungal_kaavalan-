@@ -1,130 +1,86 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ungal_kaavalan/providers/provider.dart';
+import 'package:ungal_kaavalan/screens/edit_information_screen.dart';
 
-class ProfileScreen extends StatefulWidget {
-  final String uid;
-  ProfileScreen({required this.uid});
+class ProfileScreen extends ConsumerStatefulWidget {
+  const ProfileScreen({super.key});
 
   @override
   _ProfileScreenState createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Map<String, dynamic>? userData;
-  bool _isEditing = false;
-
-  final nameController = TextEditingController();
-  final phoneController = TextEditingController();
-  final ageController = TextEditingController();
-  final genderController = TextEditingController();
-  final addressController = TextEditingController();
-  final aadharController = TextEditingController();
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    getUserData();
+    fetchUserData();
   }
 
+  void fetchUserData() async {
+    final uid = ref.read(uidProvider);
+    if (uid == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
 
-  void getUserData() async {
     DocumentSnapshot userDoc =
-    await FirebaseFirestore.instance.collection('users').doc(widget.uid).get();
+        await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
     if (userDoc.exists) {
       setState(() {
         userData = userDoc.data() as Map<String, dynamic>?;
-        nameController.text = userData?['name'] ?? "Not Provided";
-        phoneController.text = userData?['phone'] ?? "Not Provided";
-        ageController.text = userData?['age'] ?? "Not Provided";
-        genderController.text = userData?['gender'] ?? "Not Provided";
-        addressController.text = userData?['address'] ?? "Not Provided";
-        aadharController.text = userData?['aadhar'] ?? "Not Provided";
+        _isLoading = false;
       });
     } else {
       setState(() {
-        userData = {
-          'name': "Not Provided",
-          'phone': "Not Provided",
-          'age': "Not Provided",
-          'gender': "Not Provided",
-          'address': "Not Provided",
-          'aadhar': "Not Provided",
-        };
+        _isLoading = false;
       });
     }
   }
 
-
-  void saveChanges() async {
-    await FirebaseFirestore.instance.collection('users').doc(widget.uid).update({
-      'name': nameController.text,
-      'phone': phoneController.text,
-      'age': ageController.text,
-      'gender': genderController.text,
-      'address': addressController.text,
-      'aadhar': aadharController.text,
-    });
-
-    setState(() {
-      _isEditing = false;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Profile Updated!")));
-  }
-
-  Widget buildTextField(String label, TextEditingController controller, bool enabled) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          filled: true,
-          fillColor: Colors.grey[200],
-        ),
-        enabled: enabled,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final uid = ref.watch(uidProvider);
     return Scaffold(
       appBar: AppBar(title: Text("Profile"), backgroundColor: Color(0xFF3674B5)),
-      body: userData == null
+      body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            buildTextField("Name", nameController, _isEditing),
-            buildTextField("Phone", phoneController, _isEditing),
-            buildTextField("Age", ageController, _isEditing),
-            buildTextField("Gender", genderController, _isEditing),
-            buildTextField("Address", addressController, _isEditing),
-            buildTextField("Aadhar", aadharController, _isEditing),
-            SizedBox(height: 20),
-            _isEditing
-                ? ElevatedButton(
-              onPressed: saveChanges,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF578FCA),
-              ),
-              child: Text("Save", style: TextStyle(color: Colors.white)),
-            )
-                : ElevatedButton(
-              onPressed: () => setState(() => _isEditing = true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFA1E3F9),
-              ),
-              child: Text("Edit Profile", style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      ),
+          : userData == null
+              ? Center(child: Text("No user data found"))
+              : Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Name: ${userData!['name'] ?? 'Not Provided'}"),
+                      Text("Phone: ${userData!['phone'] ?? 'Not Provided'}"),
+                      Text("Age: ${userData!['age'] ?? 'Not Provided'}"),
+                      Text("Gender: ${userData!['gender'] ?? 'Not Provided'}"),
+                      Text("Address: ${userData!['address'] ?? 'Not Provided'}"),
+                      Text("Aadhar: ${userData!['aadhar'] ?? 'Not Provided'}"),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EditProfileScreen(uid: uid!),
+                            ),
+                          ).then((_) => fetchUserData()); // Refresh on return
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFFA1E3F9),
+                        ),
+                        child: Text("Edit Profile", style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                ),
     );
   }
 }
