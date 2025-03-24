@@ -5,7 +5,7 @@ class CustomTextField extends StatelessWidget {
   final String label;
   final bool isNumber;
 
-  CustomTextField({required this.controller, required this.label, this.isNumber = false});
+  const CustomTextField({super.key, required this.controller, required this.label, this.isNumber = false});
 
   @override
   Widget build(BuildContext context) {
