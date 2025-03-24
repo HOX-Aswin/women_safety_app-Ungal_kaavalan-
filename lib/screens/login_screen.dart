@@ -24,27 +24,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   void login(BuildContext context, WidgetRef ref) async {
-  if (_formKey.currentState!.validate()) {
-    try {
-      UserCredential userCredential =
-          await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+    if (_formKey.currentState!.validate()) {
+      try {
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
 
-      // Update UID provider
-      ref.read(uidProvider.notifier).state = userCredential.user!.uid;
+        final uid = userCredential.user!.uid;
 
-      // ignore: use_build_context_synchronously
-      context.go('/home'); // Navigate to home screen
-    } catch (e) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(e.toString())));
+        // Store UID and auth state in SharedPreferences
+        await ref.read(uidProvider.notifier).setUid(uid);
+        await ref.read(authProvider.notifier).setAuthState(true);
+
+        context.go('/home'); // Navigate to home screen
+      } catch (e) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
+      }
     }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {

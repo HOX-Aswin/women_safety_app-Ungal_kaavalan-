@@ -11,11 +11,13 @@ class HomeScreen extends ConsumerWidget {
   void logout(BuildContext context, WidgetRef ref) async {
   await FirebaseAuth.instance.signOut();
 
-  ref.read(authProvider.notifier).state = false;
+  // Clear UID and authentication state
+  await ref.read(uidProvider.notifier).setUid(null);
+  await ref.read(authProvider.notifier).setAuthState(false);
 
-  // ignore: use_build_context_synchronously
-  context.go('/');
+  context.go('/login'); // Navigate back to login screen
 }
+
 
 
   @override
