@@ -1,49 +1,73 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:ungal_kaavalan/providers/contact_provider.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const platform = MethodChannel('sms_channel');
 
-  // Emergency contacts
-  final List<String> emergencyNumbers = [
-    // "8778938882", //hari
-    // "8072661442", //akesh
-    "6383488874", //aswin
-    // "9043795535", //gokulanand
-    // "7604864097", //aathi
-  ];
+  List<String> emergencyNumbers = []; // Initially empty
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEmergencyContacts();
+  }
+
+  // Fetch emergency contacts from provider
+  void _loadEmergencyContacts() {
+    final emergencyContacts = ref.read(emergencyContactProvider);
+    setState(() {
+      emergencyNumbers = emergencyContacts
+          .map<String>((contact) => contact['phone'] ?? '')
+          .where((number) => number.isNotEmpty)
+          .toList();
+    });
+  }
+
   final String emergencyMessage =
       "🚨 SOS! I need help immediately. Please contact me!";
+
   // Function to send SOS message
   Future<void> _sendSOS() async {
     var status = await Permission.sms.request(); // Request SMS permission
 
     if (status.isGranted) {
+      if (emergencyNumbers.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("⚠️ No emergency contacts found.")),
+        );
+        return;
+      }
+
       for (String number in emergencyNumbers) {
         try {
           await platform.invokeMethod(
-              'sendSms', {"phone": number, "message": emergencyMessage});
+            'sendSms',
+            {"phone": number, "message": emergencyMessage},
+          );
         } on PlatformException catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("❌ Failed to send SMS: ${e.message}")),
+            SnackBar(content: Text("❌ Failed to send SMS to $number: ${e.message}")),
           );
         }
       }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("✅ SOS Message Sent!")),
+        const SnackBar(content: Text("✅ SOS Message Sent!")),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ SMS Permission Denied")),
+        const SnackBar(content: Text("❌ SMS Permission Denied")),
       );
     }
   }
@@ -88,11 +112,13 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ElevatedButton(
               onPressed: () => context.go('/emergencycontact'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFF3674B5),
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                backgroundColor: const Color(0xFF3674B5),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
-              child: Text("Emergency contacts",
-                  style: TextStyle(color: Colors.white, fontSize: 16)),
+              child: const Text(
+                "Emergency contacts",
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
             ),
           ),
         ],
