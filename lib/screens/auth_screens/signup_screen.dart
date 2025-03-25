@@ -47,6 +47,7 @@ class SignUpScreen extends ConsumerWidget {
           'address': addressController.text,
           'aadhar': aadharController.text,
         });
+        
         await ref.read(uidProvider.notifier).setUid(uid);
         await ref.read(authProvider.notifier).setAuthState(true);
         // ignore: use_build_context_synchronously

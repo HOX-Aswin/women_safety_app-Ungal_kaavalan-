@@ -74,7 +74,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(title: Text("Edit Profile"), backgroundColor: Color(0xFF3674B5)),
+      appBar: AppBar(title: const Text(
+          "Edit profile",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 27,
+            fontWeight: FontWeight.bold,
+          ),
+        ), backgroundColor: Color(0xFF3674B5)),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : Padding(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ungal_kaavalan/providers/provider.dart';
-import 'package:ungal_kaavalan/screens/core_screens/edit_information_screen.dart';
+import 'package:ungal_kaavalan/screens/core_screens/profile/edit_information_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -53,7 +53,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Profile"), backgroundColor: Color(0xFF3674B5)),
+      appBar: AppBar(title: const Text(
+          "Profile",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 27,
+            fontWeight: FontWeight.bold,
+          ),
+        ), backgroundColor: Color(0xFF3674B5)),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(

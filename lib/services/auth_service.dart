@@ -31,7 +31,8 @@ class AuthService {
           gender: "",
           age: "",
           address: "",
-          aadhar: "",
+          aadhar: "", 
+          emergencyContacts: [],
         );
         await usersCollection.doc(user.uid).set(newUser.toMap());
       }
@@ -56,7 +57,8 @@ class AuthService {
         gender: "",
         age: "",
         address: "",
-        aadhar: "",
+        aadhar: "", 
+        emergencyContacts: [],
       );
 
       await usersCollection.doc(user.uid).set(newUser.toMap());
