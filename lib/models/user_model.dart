@@ -6,6 +6,7 @@ class UserModel {
   String age;
   String address;
   String aadhar;
+  List<Map<String, String>> emergencyContacts; // List of contacts
 
   UserModel({
     required this.uid,
@@ -15,6 +16,7 @@ class UserModel {
     required this.age,
     required this.address,
     required this.aadhar,
+    required this.emergencyContacts,
   });
 
   factory UserModel.fromFirestore(Map<String, dynamic> data) {
@@ -26,6 +28,9 @@ class UserModel {
       age: data['age'],
       address: data['address'],
       aadhar: data['aadhar'],
+      emergencyContacts: List<Map<String, String>>.from(
+        (data['emergencyContacts'] ?? []).map((e) => Map<String, String>.from(e)),
+      ),
     );
   }
 
@@ -38,6 +43,7 @@ class UserModel {
       'age': age,
       'address': address,
       'aadhar': aadhar,
+      'emergencyContacts': emergencyContacts,
     };
   }
 }

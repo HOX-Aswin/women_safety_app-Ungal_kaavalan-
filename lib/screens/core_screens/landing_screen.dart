@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ungal_kaavalan/providers/provider.dart';
-import 'package:ungal_kaavalan/screens/core_screens/home_screen.dart';
-import 'package:ungal_kaavalan/screens/core_screens/info_screen.dart';
-import 'package:ungal_kaavalan/screens/core_screens/settings_screen.dart';
-import 'profile_screen.dart';
+import 'package:ungal_kaavalan/screens/core_screens/home/home_screen.dart';
+import 'package:ungal_kaavalan/screens/core_screens/info/info_screen.dart';
+import 'package:ungal_kaavalan/screens/core_screens/settings/settings_screen.dart';
+import 'profile/profile_screen.dart';
 
 class LandingScreen extends ConsumerWidget {
   const LandingScreen({super.key});
@@ -15,6 +15,7 @@ class LandingScreen extends ConsumerWidget {
     InfoScreen(),
     SettingsScreen(),
   ];
+  
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,10 +30,34 @@ class LandingScreen extends ConsumerWidget {
         backgroundColor: Color(0xFF3674B5), // Match AppBar color
         type: BottomNavigationBarType.fixed, // Prevent shifting effect
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-          BottomNavigationBarItem(icon: Icon(Icons.info), label: "Info"),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings")
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.home,
+              size: 30,
+            ),
+            label: "Home",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.person,
+              size: 30,
+            ),
+            label: "Profile",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.info,
+              size: 30,
+            ),
+            label: "Info",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.settings,
+              size: 30,
+            ),
+            label: "Settings",
+          )
         ],
       ),
     );
