@@ -32,7 +32,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       print("🚀 Logging in...");
 
       // Firebase Authentication
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
@@ -47,7 +48,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       print("✅ UID and auth state saved");
 
       // **Fetch Emergency Contacts**
-      await ref.read(emergencyContactProvider.notifier).syncEmergencyContacts(uid);
+      await ref
+          .read(emergencyContactProvider.notifier)
+          .syncEmergencyContacts(uid);
       print("✅ Emergency contacts fetched and saved");
 
       // **Navigate to landing page**
@@ -59,7 +62,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } catch (e) {
       print("❌ Login error: $e");
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Login failed: ${e.toString()}")));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Login failed: ${e.toString()}")));
       }
     }
   }
@@ -80,7 +84,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF3674B5))),
               const SizedBox(height: 10),
-              Text("Login to continue", style: TextStyle(color: Colors.grey[700])),
+              Text("Login to continue",
+                  style: TextStyle(color: Colors.grey[700])),
               const SizedBox(height: 20),
               _buildCard(
                 child: Form(
@@ -88,12 +93,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   child: Column(
                     children: [
                       _buildTextField(_emailController, "Email", Icons.email),
-                      _buildTextField(_passwordController, "Password", Icons.lock, obscureText: true),
+                      _buildTextField(
+                          _passwordController, "Password", Icons.lock,
+                          obscureText: true),
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: () => login(context, ref),
                         style: _buttonStyle(),
-                        child: const Text("Login", style: TextStyle(fontSize: 18, color: Colors.white)),
+                        child: const Text("Login",
+                            style:
+                                TextStyle(fontSize: 18, color: Colors.white)),
                       ),
                     ],
                   ),
@@ -102,7 +111,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 15),
               TextButton(
                 onPressed: () => context.go('/signup'),
-                child: const Text("Don't have an account? Sign Up", style: TextStyle(color: Color(0xFF3674B5))),
+                child: const Text("Don't have an account? Sign Up",
+                    style: TextStyle(color: Color(0xFF3674B5))),
               ),
             ],
           ),
@@ -120,7 +130,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon, {bool obscureText = false}) {
+  Widget _buildTextField(
+      TextEditingController controller, String label, IconData icon,
+      {bool obscureText = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: TextFormField(
