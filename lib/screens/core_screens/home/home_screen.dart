@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ungal_kaavalan/providers/contact_provider.dart';
@@ -35,42 +36,69 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
-  final String emergencyMessage =
-      "🚨 SOS! I need help immediately. Please contact me!";
+  final String sosMessage = "🚨 SOS! I need help immediately. Please contact me!";
 
-  // Function to send SOS message
+  // Function to send SOS message with location
   Future<void> _sendSOS() async {
     _loadEmergencyContacts();
-    var status = await Permission.sms.request(); // Request SMS permission
+    var smsStatus = await Permission.sms.request();
+    var locationStatus = await Permission.location.request();
 
-    if (status.isGranted) {
-      if (emergencyNumbers.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("⚠️ No emergency contacts found.")),
-        );
-        return;
-      }
+    if (!smsStatus.isGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("❌ SMS Permission Denied")),
+      );
+      return;
+    }
+
+    if (!locationStatus.isGranted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("❌ Location Permission Denied")),
+      );
+      return;
+    }
+
+    if (emergencyNumbers.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("⚠️ No emergency contacts found.")),
+      );
+      return;
+    }
+
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+
+      // Google Maps link for the location
+      String locationMessage = "📍 My Location: https://www.google.com/maps?q=${position.latitude},${position.longitude}";
+      print("📍 Location: ${position.latitude}, ${position.longitude}");
 
       for (String number in emergencyNumbers) {
-        try {
+        print("📤 Sending SOS to: $number");
+
+        if (number.isNotEmpty) {
           await platform.invokeMethod(
             'sendSms',
-            {"phone": number, "message": emergencyMessage},
+            {
+              "phone": number.trim(),
+              "sosMessage": sosMessage.trim(),
+              "locationMessage": locationMessage.trim(),
+            },
           );
-        } on PlatformException catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text("❌ Failed to send SMS to $number: ${e.message}")),
-          );
+
+          print("✅ SMS Sent to: $number");
+        } else {
+          print("⚠️ Skipping empty phone number.");
         }
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("✅ SOS Message Sent!")),
       );
-    } else {
+    } catch (e) {
+      print("❌ Error getting location: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ SMS Permission Denied")),
+        SnackBar(content: Text("❌ Failed to get location: $e")),
       );
     }
   }
@@ -117,7 +145,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF3674B5),
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: const Text(
                 "Emergency contacts",
@@ -135,7 +163,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF3674B5),
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: const Text(
                 "Cab mode",
