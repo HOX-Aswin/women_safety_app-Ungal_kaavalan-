@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ungal_kaavalan/providers/contact_provider.dart';
+import 'package:ungal_kaavalan/screens/core_screens/home/features/cab_mode_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -39,6 +40,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // Function to send SOS message
   Future<void> _sendSOS() async {
+    _loadEmergencyContacts();
     var status = await Permission.sms.request(); // Request SMS permission
 
     if (status.isGranted) {
@@ -57,7 +59,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           );
         } on PlatformException catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("❌ Failed to send SMS to $number: ${e.message}")),
+            SnackBar(
+                content: Text("❌ Failed to send SMS to $number: ${e.message}")),
           );
         }
       }
@@ -113,10 +116,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onPressed: () => context.go('/emergencycontact'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF3674B5),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: const Text(
                 "Emergency contacts",
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+          ),
+          const SizedBox(height: 60),
+          Center(
+            child: ElevatedButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CabModeScreen()),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3674B5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                "Cab mode",
                 style: TextStyle(color: Colors.white, fontSize: 16),
               ),
             ),

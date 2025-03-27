@@ -5,7 +5,7 @@ import '../models/user_model.dart';
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final CollectionReference usersCollection =
-  FirebaseFirestore.instance.collection('users');
+      FirebaseFirestore.instance.collection('users');
 
   User? getCurrentUser() {
     return _auth.currentUser;
@@ -31,7 +31,7 @@ class AuthService {
           gender: "",
           age: "",
           address: "",
-          aadhar: "", 
+          aadhar: "",
           emergencyContacts: [],
         );
         await usersCollection.doc(user.uid).set(newUser.toMap());
@@ -57,7 +57,7 @@ class AuthService {
         gender: "",
         age: "",
         address: "",
-        aadhar: "", 
+        aadhar: "",
         emergencyContacts: [],
       );
 

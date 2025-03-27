@@ -6,7 +6,7 @@ class UserModel {
   String age;
   String address;
   String aadhar;
-  List<Map<String, String>> emergencyContacts; // List of contacts
+  List<Map<String, String>> emergencyContacts;
 
   UserModel({
     required this.uid,
