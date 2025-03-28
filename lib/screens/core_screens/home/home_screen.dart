@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -29,6 +30,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const _shakeCooldownMs = 1000;  // Cooldown between shakes (ms)
   static const _resetShakeCountAfterMs = 3000;  // Reset counter if no shakes for this duration
   static const _requiredShakes = 3;  // Number of shakes required to trigger SOS
+  static const _sosConfirmationTimeoutSeconds = 10;  // Timeout for SOS confirmation dialog
 
   @override
   void initState() {
@@ -71,10 +73,105 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (_shakeCount >= _requiredShakes) {
             _shakeCount = 0;  // Reset counter
             _temporarilyDisableShakeDetection();  // Prevent multiple triggers
-            _sendSOS();  // Trigger SOS
+            _showSOSConfirmationDialog();  // Show confirmation dialog instead of directly triggering SOS
           }
         }
       }
+    });
+  }
+
+  void _showSOSConfirmationDialog() {
+    // Provide stronger haptic feedback to get user's attention
+    HapticFeedback.heavyImpact();
+
+    // Create a timer that will automatically send SOS if not responded to
+    Timer? autoSendTimer;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false, // User must respond to the dialog
+      builder: (BuildContext context) {
+        // Start timer for auto-send
+        autoSendTimer = Timer(Duration(seconds: _sosConfirmationTimeoutSeconds), () {
+          // Auto-close the dialog
+          Navigator.of(context).pop();
+          // Send SOS if timer expires (no user response)
+          _sendSOS();
+        });
+
+        return AlertDialog(
+          title: const Text("SOS Alert"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Do you want to send an SOS message to your emergency contacts?"),
+              const SizedBox(height: 16),
+              TweenAnimationBuilder<double>(
+                tween: Tween<double>(begin: 1.0, end: 0),
+                duration: Duration(seconds: _sosConfirmationTimeoutSeconds),
+                builder: (context, value, child) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Auto-sending in ${(value * _sosConfirmationTimeoutSeconds).ceil()} seconds...",
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      LinearProgressIndicator(
+                        value: value,
+                        backgroundColor: Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                // Cancel timer
+                autoSendTimer?.cancel();
+                Navigator.of(context).pop(); // Close dialog
+                // Re-enable shake detection
+                setState(() => _isShakeDetectionActive = true);
+              },
+              child: const Text(
+                "Cancel",
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFD32F2F),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              onPressed: () {
+                // Cancel timer
+                autoSendTimer?.cancel();
+                Navigator.of(context).pop(); // Close dialog
+                _sendSOS(); // Trigger SOS after confirmation
+              },
+              child: const Text("Send SOS Now"),
+            ),
+          ],
+        );
+      },
+    ).then((_) {
+      // Ensure timer is canceled if dialog is dismissed
+      autoSendTimer?.cancel();
     });
   }
 
