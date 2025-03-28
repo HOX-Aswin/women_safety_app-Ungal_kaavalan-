@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,6 +16,7 @@ class CabModeScreen extends ConsumerStatefulWidget {
 
 class _CabModeScreenState extends ConsumerState<CabModeScreen> {
   static const platform = MethodChannel('sms_channel');
+  Timer? _sosTimer;
 
   void _showRideDialog({bool isEditing = false}) {
     final ride = ref.read(cabModeProvider);
@@ -30,51 +30,96 @@ class _CabModeScreenState extends ConsumerState<CabModeScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(isEditing ? "Edit Ride" : "New Ride"),
+        backgroundColor: const Color(0xFF4F46E5).withOpacity(0.9),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(
+            color: Colors.white.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
+        title: Text(
+          isEditing ? "Edit Ride" : "New Ride",
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: startLocController,
-              decoration: const InputDecoration(labelText: "Start Location"),
-            ),
-            TextField(
-              controller: endLocController,
-              decoration: const InputDecoration(labelText: "End Location"),
-            ),
-            TextField(
-              controller: carNumberController,
-              decoration: const InputDecoration(labelText: "Car Number"),
-            ),
+            _buildTextField(startLocController, "Start Location", Icons.location_on),
+            const SizedBox(height: 16),
+            _buildTextField(endLocController, "End Location", Icons.location_on_outlined),
+            const SizedBox(height: 16),
+            _buildTextField(carNumberController, "Car Number", Icons.directions_car),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text("Cancel"),
+            child: Text(
+              "Cancel",
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.8),
+              ),
+            ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              final newRide = {
-                "startLoc": startLocController.text,
-                "endLoc": endLocController.text,
-                "carNumber": carNumberController.text,
-                "status": "stopped",
-              };
-              ref.read(cabModeProvider.notifier).saveRide(newRide);
-              Navigator.of(ctx).pop();
-            },
-            child: Text(isEditing ? "Save Changes" : "Save Ride"),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TextButton(
+              onPressed: () {
+                final newRide = {
+                  "startLoc": startLocController.text,
+                  "endLoc": endLocController.text,
+                  "carNumber": carNumberController.text,
+                  "status": "stopped",
+                };
+                ref.read(cabModeProvider.notifier).saveRide(newRide);
+                Navigator.of(ctx).pop();
+              },
+              child: Text(
+                isEditing ? "Save Changes" : "Save Ride",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Timer? _sosTimer;
+  Widget _buildTextField(TextEditingController controller, String label, IconData icon) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+        ),
+      ),
+      child: TextField(
+        controller: controller,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+          prefixIcon: Icon(icon, color: Colors.white.withOpacity(0.7)),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        ),
+      ),
+    );
+  }
 
   void _startPeriodicSOS(String message) {
-    _sosTimer?.cancel(); // Ensure any existing timer is stopped
+    _sosTimer?.cancel();
     _sosTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
       _sendSOS(message);
     });
@@ -102,7 +147,11 @@ class _CabModeScreenState extends ConsumerState<CabModeScreen> {
 
     if (!status.isGranted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ SMS Permission Denied")),
+        const SnackBar(
+          content: Text("❌ SMS Permission Denied"),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
@@ -111,7 +160,11 @@ class _CabModeScreenState extends ConsumerState<CabModeScreen> {
 
     if (!locationStatus.isGranted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Location Permission Denied")),
+        const SnackBar(
+          content: Text("❌ Location Permission Denied"),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
@@ -120,7 +173,6 @@ class _CabModeScreenState extends ConsumerState<CabModeScreen> {
       Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
 
-      // Google Maps link for the location
       String locationMessage =
           "📍 My Location: https://www.google.com/maps?q=${position.latitude},${position.longitude}";
       print("📍 Location: ${position.latitude}, ${position.longitude}");
@@ -145,17 +197,29 @@ class _CabModeScreenState extends ConsumerState<CabModeScreen> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ SOS Message Sent!")),
+        const SnackBar(
+          content: Text("✅ SOS Message Sent!"),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.green,
+        ),
       );
     } catch (e) {
       print("❌ Error getting location: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Failed to get location: $e")),
+        SnackBar(
+          content: Text("❌ Failed to get location: $e"),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
       );
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("✅ Ride update Message Sent!")),
+      const SnackBar(
+        content: Text("✅ Ride update Message Sent!"),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.green,
+      ),
     );
   }
 
@@ -164,123 +228,379 @@ class _CabModeScreenState extends ConsumerState<CabModeScreen> {
     final ride = ref.watch(cabModeProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Cab Mode"),
-        backgroundColor: Colors.blueAccent,
-        elevation: 0,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ride == null
-            ? const Center(
-                child: Text(
-                  "No ride available. Click '+' to add one.",
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Current Ride:",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16.0),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 5,
-                          spreadRadius: 2,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text("🚀 Start Location: ${ride['startLoc']}",
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold)),
-                        Text("🎯 End Location: ${ride['endLoc']}",
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold)),
-                        Text("🚗 Car Number: ${ride['carNumber']}",
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  if (ride["status"] == "stopped") ...[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: () => _showRideDialog(isEditing: true),
-                          icon: const Icon(Icons.edit, color: Colors.white),
-                          label: const Text("Edit Ride",
-                              style: TextStyle(color: Colors.white)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
+      body: Stack(
+        children: [
+          // Background design with curved shapes
+          Positioned.fill(
+            child: CustomPaint(
+              painter: BackgroundPainter(),
+            ),
+          ),
+
+          // Main content
+          SafeArea(
+            child: Column(
+              children: [
+                // App bar with shadcn-inspired design
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                            ),
+                            onPressed: () => Navigator.of(context).pop(),
                           ),
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            final startMessage =
-                                "I am travelling from ${ride['startLoc']} to ${ride['endLoc']} in ${ride['carNumber']}";
-                            _sendSOS(startMessage);
-                            _startPeriodicSOS("This is my current location");
-                            ref.read(cabModeProvider.notifier).startRide();
-                          },
-                          icon:
-                              const Icon(Icons.play_arrow, color: Colors.white),
-                          label: const Text("Start Ride",
-                              style: TextStyle(color: Colors.white)),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
+                          const Text(
+                            "Cab Mode",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
+                        ],
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ],
-                    ),
-                  ] else ...[
-                    Center(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          final endMessage = "I have reached ${ride['endLoc']}";
-                          _sendSOS(endMessage);
-                          _stopPeriodicSOS();
-                          ref.read(cabModeProvider.notifier).stopRide();
-                        },
-                        icon: const Icon(Icons.stop, color: Colors.white),
-                        label: const Text("Stop Ride",
-                            style: TextStyle(color: Colors.white)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 12),
+                        padding: const EdgeInsets.all(8),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.local_taxi_rounded, color: Colors.white, size: 18),
+                            const SizedBox(width: 4),
+                            Text(
+                              ride != null ? "Active" : "Inactive",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                    ],
+                  ),
+                ),
+
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: ride == null
+                        ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.directions_car_outlined,
+                            size: 80,
+                            color: Colors.white.withOpacity(0.5),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            "No ride available",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            "Tap the + button to add a new ride",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white.withOpacity(0.6),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                        : Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Ride details card with glassmorphism effect
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.2),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                "RIDE DETAILS",
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.8),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              _buildRideDetail(Icons.location_on, "From", ride['startLoc'] ?? ""),
+                              const SizedBox(height: 16),
+                              _buildRideDetail(Icons.location_on_outlined, "To", ride['endLoc'] ?? ""),
+                              const SizedBox(height: 16),
+                              _buildRideDetail(Icons.directions_car, "Car", ride['carNumber'] ?? ""),
+                              const SizedBox(height: 20),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: ride["status"] == "stopped"
+                                      ? Colors.orange.withOpacity(0.2)
+                                      : Colors.green.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: ride["status"] == "stopped"
+                                        ? Colors.orange.withOpacity(0.5)
+                                        : Colors.green.withOpacity(0.5),
+                                  ),
+                                ),
+                                child: Text(
+                                  ride["status"] == "stopped" ? "Ready to start" : "Ride in progress",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        if (ride["status"] == "stopped") ...[
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _buildActionButton(
+                                "Edit",
+                                Icons.edit,
+                                Colors.orange,
+                                    () => _showRideDialog(isEditing: true),
+                              ),
+                              _buildActionButton(
+                                "Start Ride",
+                                Icons.play_arrow_rounded,
+                                Colors.green,
+                                    () {
+                                  final startMessage =
+                                      "I am travelling from ${ride['startLoc']} to ${ride['endLoc']} in ${ride['carNumber']}";
+                                  _sendSOS(startMessage);
+                                  _startPeriodicSOS("This is my current location");
+                                  ref.read(cabModeProvider.notifier).startRide();
+                                },
+                              ),
+                            ],
+                          ),
+                        ] else ...[
+                          _buildActionButton(
+                            "End Ride",
+                            Icons.stop_circle,
+                            Colors.red,
+                                () {
+                              final endMessage = "I have reached ${ride['endLoc']}";
+                              _sendSOS(endMessage);
+                              _stopPeriodicSOS();
+                              ref.read(cabModeProvider.notifier).stopRide();
+                            },
+                          ),
+                        ],
+                      ],
                     ),
-                  ],
-                ],
-              ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
       floatingActionButton: ride == null
-          ? FloatingActionButton(
-              onPressed: _showRideDialog,
-              child: const Icon(Icons.add),
-            )
-          : null, // Hide "+" button if a ride exists
+          ? Container(
+        decoration: BoxDecoration(
+          gradient: const RadialGradient(
+            colors: [Color(0xFF4F46E5), Color(0xFF1E40AF)],
+            radius: 0.8,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF4F46E5).withOpacity(0.4),
+              blurRadius: 10,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: _showRideDialog,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
+      )
+          : null,
     );
   }
+
+  Widget _buildRideDetail(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            icon,
+            color: Colors.white,
+            size: 24,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.white.withOpacity(0.6),
+                ),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onPressed) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: color.withOpacity(0.5),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.2),
+              blurRadius: 10,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: Colors.white,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Custom painter for the background (same as in HomeScreen)
+class BackgroundPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color(0xFF4F46E5),  // Indigo
+          Color(0xFF1E40AF),  // Dark blue
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    // Paint background
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
+
+    // Draw decorative shapes
+    final shapePaint = Paint()
+      ..color = Colors.white.withOpacity(0.1)
+      ..style = PaintingStyle.fill;
+
+    // First shape
+    final path1 = Path()
+      ..moveTo(0, size.height * 0.4)
+      ..quadraticBezierTo(
+          size.width * 0.5,
+          size.height * 0.2,
+          size.width,
+          size.height * 0.3
+      )
+      ..lineTo(size.width, 0)
+      ..lineTo(0, 0)
+      ..close();
+    canvas.drawPath(path1, shapePaint);
+
+    // Second shape
+    final path2 = Path()
+      ..moveTo(0, size.height)
+      ..quadraticBezierTo(
+          size.width * 0.7,
+          size.height * 0.8,
+          size.width,
+          size.height * 0.95
+      )
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+
+    canvas.drawPath(path2, shapePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

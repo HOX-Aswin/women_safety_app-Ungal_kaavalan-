@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.ungal_kaavalan"  // ✅ Keep main app's ID
-        minSdkVersion 23  // ✅ Set minSdk from main app
+        minSdkVersion 24  // ✅ Set minSdk from main app
         targetSdkVersion 34  // ✅ Explicitly set targetSdk
         versionCode flutter.versionCode
         versionName flutter.versionName

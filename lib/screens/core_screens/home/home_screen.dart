@@ -3,10 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:ungal_kaavalan/providers/contact_provider.dart';
 import 'package:ungal_kaavalan/screens/core_screens/home/features/cab_mode_screen.dart';
-import 'package:ungal_kaavalan/screens/core_screens/home/features/voice_detection_screen.dart'; // Import the voice detection screen
+import 'package:ungal_kaavalan/screens/core_screens/home/features/voice_detection_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -39,19 +38,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Future<void> _sendSOS() async {
     _loadEmergencyContacts();
-    var smsStatus = await Permission.sms.request();
-    var locationStatus = await Permission.location.request();
-
-    if (!smsStatus.isGranted || !locationStatus.isGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Permissions Denied")),
-      );
-      return;
-    }
 
     if (emergencyNumbers.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("⚠️ No emergency contacts found.")),
+        const SnackBar(
+          content: Text("⚠️ No emergency contacts found."),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.orange,
+        ),
       );
       return;
     }
@@ -72,13 +66,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           );
         }
       }
-//test
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ SOS Message Sent!")),
+        const SnackBar(
+          content: Text("✅ SOS Message Sent!"),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.green,
+        ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ Failed to get location: $e")),
+        SnackBar(
+          content: Text("❌ Failed to get location: $e"),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -86,84 +88,308 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Home",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 27,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: const Color(0xFF3674B5),
-      ),
-      body: Column(
+      body: Stack(
         children: [
-          const SizedBox(height: 60),
-          Center(
-            child: ElevatedButton(
-              onPressed: _sendSOS,
-              style: ElevatedButton.styleFrom(
-                shape: const CircleBorder(),
-                padding: const EdgeInsets.all(130),
-                backgroundColor: Colors.red,
-              ),
-              child: const Text(
-                "SOS",
-                style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
-              ),
+          // Background design with curved shapes
+          Positioned.fill(
+            child: CustomPaint(
+              painter: BackgroundPainter(),
             ),
           ),
-          const SizedBox(height: 60),
-          Center(
-            child: ElevatedButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => VoiceDetectionScreen(onTriggerSOS: _sendSOS)), // Navigate to voice detection
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3674B5),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: const Text(
-                "Audio Detection",
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-            ),
-          ),
-          const SizedBox(height: 60),
-          Center(
-            child: ElevatedButton(
-              onPressed: () => context.go('/emergencycontact'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3674B5),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: const Text(
-                "Emergency contacts",
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-            ),
-          ),
-          const SizedBox(height: 60),
-          Center(
-            child: ElevatedButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CabModeScreen()),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3674B5),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              child: const Text(
-                "Cab mode",
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
+
+          // Main content
+          SafeArea(
+            child: Column(
+              children: [
+                // App bar with shadcn-inspired design
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Ungal Kaavalan",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.all(8),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.people, color: Colors.white, size: 18),
+                            const SizedBox(width: 4),
+                            Text(
+                              "${emergencyNumbers.length}",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // SOS Button with animated effect
+                        TweenAnimationBuilder<double>(
+                          tween: Tween<double>(begin: 0.95, end: 1.0),
+                          duration: const Duration(seconds: 2),
+                          builder: (context, value, child) {
+                            return Transform.scale(
+                              scale: value,
+                              child: GestureDetector(
+                                onTap: _sendSOS,
+                                child: Container(
+                                  width: 200,
+                                  height: 200,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    gradient: const RadialGradient(
+                                      colors: [Color(0xFFFF5252), Color(0xFFD32F2F)],
+                                      radius: 0.8,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFFFF5252).withOpacity(0.4),
+                                        blurRadius: 30,
+                                        spreadRadius: 5,
+                                      ),
+                                      const BoxShadow(
+                                        color: Color(0xFFFFCDD2),
+                                        blurRadius: 0,
+                                        spreadRadius: 2,
+                                        offset: Offset(0, -4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Container(
+                                        width: 180,
+                                        height: 180,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white.withOpacity(0.3),
+                                            width: 15,
+                                          ),
+                                        ),
+                                      ),
+                                      const Text(
+                                        "SOS",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 48,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 2,
+                                          shadows: [
+                                            Shadow(
+                                              offset: Offset(0, 2),
+                                              blurRadius: 5,
+                                              color: Color(0xAAB71C1C),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Text(
+                            "Press for emergency assistance",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Feature shortcuts with glassmorphism effect
+                Container(
+                  margin: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.2),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        "SAFETY FEATURES",
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildFeatureButton(
+                            "Cab Mode",
+                            Icons.local_taxi_rounded,
+                                () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => CabModeScreen()),
+                            ),
+                          ),
+                          _buildFeatureButton(
+                            "Voice Alert",
+                            Icons.mic_rounded,
+                                () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => VoiceDetectionScreen(onTriggerSOS: _sendSOS)),
+                            ),
+                          ),
+                          _buildFeatureButton(
+                            "Contacts",
+                            Icons.person_rounded,
+                                () => context.go('/emergencycontact'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _buildFeatureButton(String label, IconData icon, VoidCallback onPressed) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Column(
+        children: [
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.2),
+              ),
+            ),
+            child: Icon(
+              icon,
+              size: 32,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Custom painter for the background
+class BackgroundPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color(0xFF4F46E5),  // Indigo
+          Color(0xFF1E40AF),  // Dark blue
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    // Paint background
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
+
+    // Draw decorative shapes
+    final shapePaint = Paint()
+      ..color = Colors.white.withOpacity(0.1)
+      ..style = PaintingStyle.fill;
+
+    // First shape
+    final path1 = Path()
+      ..moveTo(0, size.height * 0.4)
+      ..quadraticBezierTo(
+          size.width * 0.5,
+          size.height * 0.2,
+          size.width,
+          size.height * 0.3
+      )
+      ..lineTo(size.width, 0)
+      ..lineTo(0, 0)
+      ..close();
+    canvas.drawPath(path1, shapePaint);
+
+    // Second shape
+    final path2 = Path()
+      ..moveTo(0, size.height)
+      ..quadraticBezierTo(
+          size.width * 0.7,
+          size.height * 0.8,
+          size.width,
+          size.height * 0.95
+      )
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+
+    canvas.drawPath(path2, shapePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

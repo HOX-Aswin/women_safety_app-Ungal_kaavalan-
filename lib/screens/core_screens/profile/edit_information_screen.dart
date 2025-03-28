@@ -30,7 +30,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   void fetchUserData() async {
     final uid = ref.read(uidProvider);
     DocumentSnapshot userDoc =
-        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
     if (userDoc.exists) {
       Map<String, dynamic> data = userDoc.data() as Map<String, dynamic>;
@@ -52,6 +52,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   void updateData() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
       final uid = ref.read(uidProvider);
       await FirebaseFirestore.instance.collection('users').doc(uid).update({
         'name': nameController.text,
@@ -62,8 +66,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         'aadhar': aadharController.text,
       });
 
+      setState(() {
+        _isLoading = false;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Profile updated successfully!")),
+        const SnackBar(
+          content: Text("✅ Profile updated successfully!"),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.green,
+        ),
       );
 
       Navigator.pop(context);
@@ -74,58 +86,277 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(title: const Text(
-          "Edit profile",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 27,
-            fontWeight: FontWeight.bold,
+      body: Stack(
+        children: [
+          // Background design with curved shapes
+          Positioned.fill(
+            child: CustomPaint(
+              painter: BackgroundPainter(),
+            ),
           ),
-        ), backgroundColor: Color(0xFF3674B5)),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                  child: Column(
-                    children: [
-                      _buildTextField(nameController, "Name"),
-                      _buildTextField(phoneController, "Phone", isNumber: true),
-                      _buildTextField(ageController, "Age", isNumber: true),
-                      _buildTextField(genderController, "Gender"),
-                      _buildTextField(addressController, "Address"),
-                      _buildTextField(aadharController, "Aadhar", isNumber: true),
-                      SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: updateData,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF578FCA),
+
+          // Main content
+          SafeArea(
+            child: _isLoading
+                ? const Center(
+              child: CircularProgressIndicator(
+                color: Colors.white,
+              ),
+            )
+                : Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  // App bar with shadcn-inspired design
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () => Navigator.pop(context),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.all(8),
+                                child: const Icon(
+                                  Icons.arrow_back,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              "Edit Profile",
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
-                        child: Text("Save Changes", style: TextStyle(color: Colors.white)),
-                      ),
-                    ],
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.all(8),
+                          child: const Icon(
+                            Icons.edit,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+
+                  // Form fields in a scrollable container
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.2),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "PERSONAL INFORMATION",
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.8),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            _buildInputField(nameController, "Name", Icons.person_outline),
+                            _buildInputField(phoneController, "Phone", Icons.phone_outlined, isNumber: true),
+                            _buildInputField(ageController, "Age", Icons.calendar_today_outlined, isNumber: true),
+                            _buildInputField(genderController, "Gender", Icons.people_outline),
+                            _buildInputField(addressController, "Address", Icons.home_outlined),
+                            _buildInputField(aadharController, "Aadhar", Icons.credit_card_outlined, isNumber: true),
+                            const SizedBox(height: 20),
+
+                            // Save button
+                            GestureDetector(
+                              onTap: updateData,
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                decoration: BoxDecoration(
+                                  gradient: const RadialGradient(
+                                    colors: [Color(0xFF4F46E5), Color(0xFF3674B5)],
+                                    radius: 3.0,
+                                    center: Alignment.topLeft,
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFF4F46E5).withOpacity(0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.save_outlined,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      "Save Changes",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-    );
-  }
-
-  Widget _buildTextField(TextEditingController controller, String label, {bool isNumber = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(),
-        ),
-        validator: (value) => value!.isEmpty ? "Enter your $label" : null,
+          ),
+        ],
       ),
     );
   }
+
+  Widget _buildInputField(
+      TextEditingController controller,
+      String label,
+      IconData icon, {
+        bool isNumber = false,
+      }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+        ),
+      ),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+        ),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(
+            color: Colors.white.withOpacity(0.7),
+            fontSize: 14,
+          ),
+          prefixIcon: Container(
+            margin: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: 18,
+            ),
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        ),
+        validator: (value) => value!.isEmpty ? "Please enter your $label" : null,
+      ),
+    );
+  }
+}
+
+// Custom painter for the background - same as previous screens
+class BackgroundPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Color(0xFF4F46E5),  // Indigo
+          Color(0xFF1E40AF),  // Dark blue
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    // Paint background
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
+
+    // Draw decorative shapes
+    final shapePaint = Paint()
+      ..color = Colors.white.withOpacity(0.1)
+      ..style = PaintingStyle.fill;
+
+    // First shape
+    final path1 = Path()
+      ..moveTo(0, size.height * 0.4)
+      ..quadraticBezierTo(
+          size.width * 0.5,
+          size.height * 0.2,
+          size.width,
+          size.height * 0.3
+      )
+      ..lineTo(size.width, 0)
+      ..lineTo(0, 0)
+      ..close();
+    canvas.drawPath(path1, shapePaint);
+
+    // Second shape
+    final path2 = Path()
+      ..moveTo(0, size.height)
+      ..quadraticBezierTo(
+          size.width * 0.7,
+          size.height * 0.8,
+          size.width,
+          size.height * 0.95
+      )
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+
+    canvas.drawPath(path2, shapePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
