@@ -1,8 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:ungal_kaavalan/providers/contact_provider.dart';
 import 'package:ungal_kaavalan/screens/core_screens/home/features/cab_mode_screen.dart';
 import 'package:ungal_kaavalan/screens/core_screens/home/features/voice_detection_screen.dart';
@@ -18,10 +21,78 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const platform = MethodChannel('sms_channel');
   List<String> emergencyNumbers = [];
 
+  // Shake detection variables
+  bool _isShakeDetectionActive = true;
+  DateTime? _lastShakeTime;
+  int _shakeCount = 0;
+  static const _shakeThreshold = 15.0;  // Adjust sensitivity as needed
+  static const _shakeCooldownMs = 1000;  // Cooldown between shakes (ms)
+  static const _resetShakeCountAfterMs = 3000;  // Reset counter if no shakes for this duration
+  static const _requiredShakes = 3;  // Number of shakes required to trigger SOS
+
   @override
   void initState() {
     super.initState();
     _loadEmergencyContacts();
+    _initShakeDetection();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  void _initShakeDetection() {
+    accelerometerEvents.listen((AccelerometerEvent event) {
+      if (!_isShakeDetectionActive) return;
+
+      double acceleration = _calculateAcceleration(event);
+      DateTime now = DateTime.now();
+
+      // Reset shake count if it's been too long since last shake
+      if (_lastShakeTime != null &&
+          now.difference(_lastShakeTime!).inMilliseconds > _resetShakeCountAfterMs &&
+          _shakeCount > 0) {
+        _shakeCount = 0;
+      }
+
+      // Detect shake
+      if (acceleration > _shakeThreshold) {
+        // Check if enough time has passed since last shake
+        if (_lastShakeTime == null ||
+            now.difference(_lastShakeTime!).inMilliseconds > _shakeCooldownMs) {
+          _lastShakeTime = now;
+          _shakeCount++;
+
+          // Provide subtle feedback
+          HapticFeedback.lightImpact();
+
+          // Check if we've reached required number of shakes
+          if (_shakeCount >= _requiredShakes) {
+            _shakeCount = 0;  // Reset counter
+            _temporarilyDisableShakeDetection();  // Prevent multiple triggers
+            _sendSOS();  // Trigger SOS
+          }
+        }
+      }
+    });
+  }
+
+  double _calculateAcceleration(AccelerometerEvent event) {
+    // Calculate acceleration magnitude using the Euclidean norm
+    return sqrt(event.x * event.x + event.y * event.y + event.z * event.z);
+  }
+
+  void _temporarilyDisableShakeDetection() {
+    // Disable shake detection temporarily to prevent multiple triggers
+    setState(() => _isShakeDetectionActive = false);
+
+    // Re-enable after a cooldown period
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() => _isShakeDetectionActive = true);
+      }
+    });
   }
 
   void _loadEmergencyContacts() {

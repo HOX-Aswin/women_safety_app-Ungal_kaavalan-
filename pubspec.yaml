@@ -45,7 +45,8 @@ dependencies:
   geocoding: ^3.0.0
   sensors_plus: ^6.1.1
   android_intent_plus: ^5.3.0
-  flutter_sound: ^9.28.0
+  flutter_sound: ^9.28.0   # For detecting shake gestures
+  vibration: ^1.8.3
 
 dev_dependencies:
   flutter_test:
