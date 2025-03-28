@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -67,6 +69,26 @@ class _CabModeScreenState extends ConsumerState<CabModeScreen> {
         ],
       ),
     );
+  }
+
+  Timer? _sosTimer;
+
+  void _startPeriodicSOS(String message) {
+    _sosTimer?.cancel(); // Ensure any existing timer is stopped
+    _sosTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      _sendSOS(message);
+    });
+  }
+
+  void _stopPeriodicSOS() {
+    _sosTimer?.cancel();
+    _sosTimer = null;
+  }
+
+  @override
+  void dispose() {
+    _sosTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _sendSOS(String message) async {
@@ -215,6 +237,7 @@ class _CabModeScreenState extends ConsumerState<CabModeScreen> {
                             final startMessage =
                                 "I am travelling from ${ride['startLoc']} to ${ride['endLoc']} in ${ride['carNumber']}";
                             _sendSOS(startMessage);
+                            _startPeriodicSOS("This is my current location");
                             ref.read(cabModeProvider.notifier).startRide();
                           },
                           icon:
@@ -235,6 +258,7 @@ class _CabModeScreenState extends ConsumerState<CabModeScreen> {
                         onPressed: () {
                           final endMessage = "I have reached ${ride['endLoc']}";
                           _sendSOS(endMessage);
+                          _stopPeriodicSOS();
                           ref.read(cabModeProvider.notifier).stopRide();
                         },
                         icon: const Icon(Icons.stop, color: Colors.white),
