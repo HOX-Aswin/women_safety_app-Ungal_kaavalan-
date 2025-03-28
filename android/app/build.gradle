@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace "com.example.ungal_kaavalan"  // ✅ Keep your main app's namespace
-    compileSdk 34  // ✅ Explicit compileSdk version
+    compileSdk 35  // ✅ Explicit compileSdk version
     ndkVersion = flutter.ndkVersion
 
     defaultConfig {

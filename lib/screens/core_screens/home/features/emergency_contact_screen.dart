@@ -5,6 +5,8 @@ import 'package:ungal_kaavalan/providers/contact_provider.dart';
 import 'package:ungal_kaavalan/providers/provider.dart';
 
 class EmergencyContactScreen extends ConsumerWidget {
+  const EmergencyContactScreen({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final contacts = ref.watch(emergencyContactProvider);
