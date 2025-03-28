@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ungal_kaavalan/providers/contact_provider.dart';
 import 'package:ungal_kaavalan/screens/core_screens/home/features/cab_mode_screen.dart';
+import 'package:ungal_kaavalan/screens/core_screens/home/features/voice_detection_screen.dart'; // Import the voice detection screen
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -16,8 +17,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   static const platform = MethodChannel('sms_channel');
-
-  List<String> emergencyNumbers = []; // Initially empty
+  List<String> emergencyNumbers = [];
 
   @override
   void initState() {
@@ -25,7 +25,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _loadEmergencyContacts();
   }
 
-  // Fetch emergency contacts from provider
   void _loadEmergencyContacts() {
     final emergencyContacts = ref.read(emergencyContactProvider);
     setState(() {
@@ -38,22 +37,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   final String sosMessage = "🚨 SOS! I need help immediately. Please contact me!";
 
-  // Function to send SOS message with location
   Future<void> _sendSOS() async {
     _loadEmergencyContacts();
     var smsStatus = await Permission.sms.request();
     var locationStatus = await Permission.location.request();
 
-    if (!smsStatus.isGranted) {
+    if (!smsStatus.isGranted || !locationStatus.isGranted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ SMS Permission Denied")),
-      );
-      return;
-    }
-
-    if (!locationStatus.isGranted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Location Permission Denied")),
+        const SnackBar(content: Text("❌ Permissions Denied")),
       );
       return;
     }
@@ -66,16 +57,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     try {
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-
-      // Google Maps link for the location
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       String locationMessage = "📍 My Location: https://www.google.com/maps?q=${position.latitude},${position.longitude}";
-      print("📍 Location: ${position.latitude}, ${position.longitude}");
 
       for (String number in emergencyNumbers) {
-        print("📤 Sending SOS to: $number");
-
         if (number.isNotEmpty) {
           await platform.invokeMethod(
             'sendSms',
@@ -85,10 +70,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               "locationMessage": locationMessage.trim(),
             },
           );
-
-          print("✅ SMS Sent to: $number");
-        } else {
-          print("⚠️ Skipping empty phone number.");
         }
       }
 
@@ -96,7 +77,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         const SnackBar(content: Text("✅ SOS Message Sent!")),
       );
     } catch (e) {
-      print("❌ Error getting location: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("❌ Failed to get location: $e")),
       );
@@ -119,22 +99,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       body: Column(
         children: [
-          const SizedBox(height: 60), // Padding between app bar and button
+          const SizedBox(height: 60),
           Center(
             child: ElevatedButton(
-              onPressed: _sendSOS, // Calls the SOS function
+              onPressed: _sendSOS,
               style: ElevatedButton.styleFrom(
                 shape: const CircleBorder(),
-                padding: const EdgeInsets.all(130), // Large button
+                padding: const EdgeInsets.all(130),
                 backgroundColor: Colors.red,
               ),
               child: const Text(
                 "SOS",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          const SizedBox(height: 60),
+          Center(
+            child: ElevatedButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => VoiceDetectionScreen(onTriggerSOS: _sendSOS)), // Navigate to voice detection
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF3674B5),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+              child: const Text(
+                "Audio Detection",
+                style: TextStyle(color: Colors.white, fontSize: 16),
               ),
             ),
           ),
@@ -144,8 +137,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onPressed: () => context.go('/emergencycontact'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF3674B5),
-                padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: const Text(
                 "Emergency contacts",
@@ -162,8 +154,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF3674B5),
-                padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: const Text(
                 "Cab mode",
